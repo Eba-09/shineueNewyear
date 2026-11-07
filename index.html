@@ -73,7 +73,7 @@ h1 em{color:var(--gold);font-style:italic}
 .clear.show{display:grid}
 .clear:hover{background:rgba(255,255,255,.07);color:var(--cream)}
 .sec-h{display:flex;align-items:baseline;gap:12px;margin:26px 0 14px}
-.sec-n{font-family:var(--display);font-style:italic;font-weight:700;font-size:26px;color:var(--gold);line-height:1}
+.sec-n{font-family:var(--body);font-weight:700;font-size:22px;color:var(--gold);line-height:1}
 .sec-t{font-weight:700;font-size:15px;letter-spacing:.03em}
 .sec-sub{margin-left:auto;font-size:13px;color:var(--muted)}
 
@@ -178,7 +178,7 @@ details.admin[open] summary .arr{transform:rotate(180deg)}
 .admin-body{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;padding-top:16px}
 .stats{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .stat{border:1px solid var(--line);border-radius:12px;padding:10px 12px}
-.stat b{display:block;font-family:var(--display);font-size:30px;line-height:1;font-variant-numeric:tabular-nums;color:var(--gold)}
+.stat b{display:block;font-family:var(--body);font-weight:700;font-size:26px;line-height:1;font-variant-numeric:tabular-nums;color:var(--gold)}
 .stat span{font-size:11.5px;color:var(--muted)}
 .admin .btn{min-height:48px;font-size:13.5px;justify-content:flex-start}
 .progress{grid-column:1/-1;height:6px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden;display:none}
@@ -573,6 +573,16 @@ function hangingToys(c,t,isStatic){
     c.restore();
   });
 }
+/* Digits drawn in Montserrat (lining figures) inside a Cormorant line. */
+function mixedLine(c,text,x,y,maxW,size,min){
+  const parts=text.split(/([0-9][0-9:.]*)/).filter(Boolean);
+  const f=(p,sz)=>/^[0-9]/.test(p)?`600 ${Math.round(sz*.8)}px ${SANS}`:`italic 700 ${sz}px ${DISPLAY}`;
+  const width=sz=>parts.reduce((w,p)=>{c.font=f(p,sz);return w+c.measureText(p).width;},0);
+  while(width(size)>maxW&&size>min)size--;
+  let cx=x-width(size)/2;const al=c.textAlign;c.textAlign="left";
+  parts.forEach(p=>{c.font=f(p,size);c.fillText(p,cx,y);cx+=c.measureText(p).width;});
+  c.textAlign=al;
+}
 function noShadow(ctx){ctx.shadowColor="transparent";ctx.shadowBlur=0;ctx.shadowOffsetY=0;}
 
 function drawPoster(ctx,person,lang,opt){
@@ -592,10 +602,10 @@ function drawPoster(ctx,person,lang,opt){
   noShadow(ctx);
 
   diamondRule(ctx,448,230,72);
-  ctx.fillStyle="#f3dda4";ctx.font=`700 40px ${DISPLAY}`;spaced(ctx,t.year,W/2,462,8);
+  ctx.fillStyle="#f3dda4";ctx.font=`700 34px ${SANS}`;spaced(ctx,t.year,W/2,460,9);
 
   const isGeneral=!person;
-  if(!isGeneral){ctx.fillStyle="#e7c27a";ctx.font=`italic 600 38px ${DISPLAY}`;ctx.fillText(t.greet,W/2,522);}
+  ctx.fillStyle="#e7c27a";ctx.font=`italic 600 38px ${DISPLAY}`;ctx.fillText(t.greet,W/2,522);
   const ry=540,rh=104,rx=150,rw=W-300;
   ctx.fillStyle="#5e0815";
   [[rx+16,-1],[rx+rw-16,1]].forEach(([x,d])=>{ctx.beginPath();ctx.moveTo(x,ry+16);ctx.lineTo(x+d*92,ry+16);ctx.lineTo(x+d*62,ry+16+rh/2);ctx.lineTo(x+d*92,ry+16+rh);ctx.lineTo(x,ry+16+rh);ctx.closePath();ctx.fill();});
@@ -604,10 +614,10 @@ function drawPoster(ctx,person,lang,opt){
   ctx.strokeStyle=goldGrad(ctx,ry,ry+rh);ctx.lineWidth=3.5;ctx.stroke();
   ctx.strokeStyle="rgba(240,205,130,.45)";ctx.lineWidth=1.2;rr(ctx,rx+9,ry+9,rw-18,rh-18,6);ctx.stroke();
 
-  const name=isGeneral?t.general:nameFor(person,lang);
+  const name=isGeneral?"":nameFor(person,lang);
   const size=fitFont(ctx,name,rw-70,88,40,s=>`700 ${s}px ${DISPLAY}`);
   ctx.fillStyle="#fff4dc";ctx.shadowColor="rgba(0,0,0,.35)";ctx.shadowBlur=8;ctx.shadowOffsetY=2;
-  ctx.fillText(name,W/2,ry+rh/2+size*.32);noShadow(ctx);M(ctx.font,name,W/2,ry+rh/2+size*.32);
+  if(name){ctx.fillText(name,W/2,ry+rh/2+size*.32);M(ctx.font,name,W/2,ry+rh/2+size*.32);}noShadow(ctx);
 
   let y=726;
   if(!isGeneral){
@@ -629,7 +639,7 @@ function drawPoster(ctx,person,lang,opt){
   const dw=spaced(ctx,t.date1,W/2,dy,4);
   ctx.strokeStyle="rgba(226,186,108,.8)";ctx.lineWidth=2;
   ctx.beginPath();ctx.moveTo(W/2-dw/2-24,dy-8);ctx.lineTo(W/2-dw/2-56,dy-8);ctx.moveTo(W/2+dw/2+24,dy-8);ctx.lineTo(W/2+dw/2+56,dy-8);ctx.stroke();
-  ctx.fillStyle="#f7eedc";fitFont(ctx,t.date2,580,42,28,s=>`italic 700 ${s}px ${DISPLAY}`);ctx.fillText(t.date2,W/2,dy+50);M(ctx.font,t.date2,W/2,dy+50);
+  ctx.fillStyle="#f7eedc";mixedLine(ctx,t.date2,W/2,dy+50,580,42,28);
   TREE.top=Math.max(dy+74,1000);
   if(opt.tree!==false)tree(ctx,{grow:1,t:0,static:true});
   if(opt.toys!==false)hangingToys(ctx,0,true);
